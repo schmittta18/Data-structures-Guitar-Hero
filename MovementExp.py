@@ -5,13 +5,22 @@ Bouncing balls
 
 
 import pygame
+from pygame.locals import *
 
 
 BLACK = (0, 0, 0)
 
+keyConstants = [pygame.K_a,pygame.K_s,pygame.K_d,pygame.K_f,pygame.K_g,pygame.K_h]
+
+
+
+
+
 pygame.init()
 
-canvas = pygame.display.set_mode((400, 690))
+canvas = pygame.display.set_mode((1380,720))
+
+
 
 
 class Brick(pygame.sprite.Sprite):
@@ -35,7 +44,29 @@ class Brick(pygame.sprite.Sprite):
 
         # Move the .rect to the specified location
         self.rect = self.rect.move(location)
-    def keyOut(self)
+        
+        
+    #def update(self):
+        #if pygame.sprite.spritecollide(self, brick_spritegroup, False):
+            #if self.keying:
+                
+            # Change the direction
+            # Start moving up instead of down
+            # or, start moving down instead of up
+                  
+        
+    
+        
+        
+        
+            
+    
+        
+        
+        
+        
+        
+
 
 
 class Ball(pygame.sprite.Sprite):
@@ -59,7 +90,7 @@ class Ball(pygame.sprite.Sprite):
     # .update method
     def update(self):
         # If this ball collides with any brick
-        if pygame.sprite.spritecollide(self, brick_spritegroup, False):
+        if pygame.sprite.spritecollide(self, fret_spritegroup, False):
             # Change the direction
             # Start moving up instead of down
             # or, start moving down instead of up
@@ -73,19 +104,11 @@ class Ball(pygame.sprite.Sprite):
 # place and update them with a single command
 brick_spritegroup = pygame.sprite.Group()
 ball_spritegroup = pygame.sprite.Group()
+fret_spritegroup = pygame.sprite.Group()
 
-for i in range(6):
-   
 
-    # A horizontal line of bricks at the bottom of the window
-    brick_spritegroup.add(
-        Brick((15 + 60 * i, 500))
-    )
 
-    # A horizontal line of balls, in the middle of the window
-    ball_spritegroup.add(
-        Ball((25 + 60 * i, 300))
-    )
+    
 
 # Use a pygame .Clock to slow this down
 clock = pygame.time.Clock()
@@ -94,10 +117,30 @@ done = False
 while not done:
 
     for event in pygame.event.get():
-        if event.type == pygame.KEYDOWN and event.key == pygame.K_q:
+        if event.type == QUIT:
             done = True
+        pressed_keys = pygame.key.get_pressed()
+        
+        
+        if pressed_keys[K_a]:
+            fret_spritegroup.add(Brick((15,500)))
+            
+        elif pressed_keys[K_s]:
+            fret_spritegroup.add(Brick((15+60,500)))
+        if pressed_keys[K_d]:
+            fret_spritegroup.add(Brick((15+120,500)))
+        elif pressed_keys[K_f]:
+            fret_spritegroup.add(Brick((15+180,500)))
+        elif pressed_keys[K_g]:
+            fret_spritegroup.add(Brick((15+240,500)))
+        elif pressed_keys[K_h]:
+            fret_spritegroup.add(Brick((15+300,500)))            
+    
+    
+            
 
     canvas.fill(BLACK)
+    
     #generate new group of balls
     #we need to make sure we're separating adequately
     if timeMeasure %10 == 0:
@@ -108,7 +151,7 @@ while not done:
             )           
 
     # Draw bricks and balls
-    brick_spritegroup.draw(canvas)
+    fret_spritegroup.draw(canvas)
     ball_spritegroup.draw(canvas)
 
     # Show the new canvas

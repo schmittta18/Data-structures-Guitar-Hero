@@ -1,0 +1,235 @@
+"""
+Using sprites in pygame
+Bouncing balls
+"""
+
+
+import pygame
+import os
+from pygame.locals import *
+
+
+BLACK = (0, 0, 0)
+
+keyConstants = [pygame.K_a,pygame.K_s,pygame.K_d,pygame.K_f,pygame.K_g]
+
+
+
+
+#Initialize Pygame and Mixer
+pygame.init()
+pygame.mixer.pre_init(44100, -16, 2, 2048)
+
+canvas = pygame.display.set_mode((1380,720))
+
+
+
+
+class Brick(pygame.sprite.Sprite):
+    """
+    Create a 'Brick' class, as a subclass of .Sprite
+    """
+    def __init__(self, location):
+        # initialise the super (.Sprite) class
+        super().__init__()
+
+        # Create a 50 x 30 brown Surface
+        # A sprite must have a .image attribute
+        # The .image gets drawn when drawing the sprite
+        self.image = pygame.Surface((50, 30))
+        self.image.fill(pygame.color.Color('brown'))
+    
+
+        # A sprite must have a .rect
+        # This is where the .image gets drawn
+        self.rect = self.image.get_rect()
+
+        # Move the .rect to the specified location
+        self.rect = self.rect.move(location)
+        
+        
+    #def update(self):
+        #if pygame.sprite.spritecollide(self, brick_spritegroup, False):
+            #if self.keying:
+                
+            # Change the direction
+            # Start moving up instead of down
+            # or, start moving down instead of up
+                  
+        
+    
+
+class Ball(pygame.sprite.Sprite):
+    """
+    A ball will be a blue circle, with a radius of 15
+    The background has an alpha layer, so anything behind
+    the area outside of the circle but within the 30 x 30 square
+    can be seen 'through' the sprite's Surface
+    """
+
+    def __init__(self, location, color):
+        super().__init__()
+        
+        colors = ['green', 'red', 'yellow', 'blue', 'orange']
+        self.image = pygame.Surface((60, 60), pygame.SRCALPHA)
+        pygame.draw.circle(self.image, pygame.color.Color(colors[color]), (20, 20), 20)
+        self.rect = self.image.get_rect()
+        self.rect = self.rect.move(location)
+        self.move_y = 10
+
+    # The .update method gets called when calling the sprite group's
+    # .update method
+    def update(self):
+        # If this ball collides with any brick
+        if pygame.sprite.spritecollide(self, fret_spritegroup, False):
+            # Change the direction
+            # Start moving up instead of down
+            # or, start moving down instead of up
+            self.move_y = -self.move_y
+
+        # Move the ball by the current direction and distance (10 up or down)
+        self.rect.move_ip((0, self.move_y))
+
+
+
+##################################################
+#                    MAIN                        #
+##################################################
+
+# These will group our bricks and balls, so we can
+# place and update them with a single command
+brick_spritegroup = pygame.sprite.Group()
+ball_spritegroup = pygame.sprite.Group()
+fret_spritegroup = pygame.sprite.Group()
+
+
+
+
+#Music track files
+s = "Guitar Hero III Tracks\Quickplay\Guns N' Roses - Welcome To The Jungle"
+#s = "Guitar Hero III Tracks\Quickplay\Weezer - My Name Is Jonas"
+#s = "Guitar Hero III Tracks\Bonus\The Fall Of Troy - F.C.P.R.E.M.I.X"
+
+
+#Song track threads
+guitar = pygame.mixer.Sound((os.path.join(s, 'guitar.ogg')))
+rhythm = pygame.mixer.Sound((os.path.join(s, 'rhythm.ogg')))
+song = pygame.mixer.Sound((os.path.join(s, 'song.ogg')))
+
+album = pygame.image.load((os.path.join(s, 'album.png')))
+fretboard = pygame.image.load((os.path.join(s, 'fretboard.jpg')))
+
+chart = os.path.join(s, 'notes.chart')
+
+#Chart read
+chartList = []
+chartFile = open(chart,"r")
+
+for line in chartFile:
+    line = line.strip('\t')
+    line = line.strip('\n')
+    chartList.append(line)
+    
+chartFile.close()
+
+difficulty = ['[ExpertSingle]', '[HardSingle]', '[MediumSingle]', ['EasySingle'] ]
+startIndex = chartList.index(difficulty[0])+2
+chartList = chartList[startIndex:]
+
+endIndex = chartList.index('}')
+chartList = chartList[:endIndex]
+
+
+'''
+Resolution is 192 for the majority of songs but may need to change
+based on future song decisions, BPM will need to vary as well
+'''
+resolution = 192 
+bpm = 99833/1000
+currentIndex = 0
+playedNote = False
+
+
+# Use a pygame .Clock to slow this down
+clock = pygame.time.Clock()
+
+#flags for loop
+done = False
+first = True
+
+#initiate sound threads
+guitar.play(1)
+rhythm.play(1)
+song.play(1)
+
+while not done:
+    
+    
+    for event in pygame.event.get():
+        if event.type == QUIT:
+            done = True
+        pressed_keys = pygame.key.get_pressed()
+        
+        
+        if pressed_keys[K_a]:
+            fret_spritegroup.add(Brick((15,500)))
+            
+        elif pressed_keys[K_s]:
+            fret_spritegroup.add(Brick((15+60,500)))
+        elif pressed_keys[K_d]:
+            fret_spritegroup.add(Brick((15+120,500)))
+        elif pressed_keys[K_f]:
+            fret_spritegroup.add(Brick((15+180,500)))
+        elif pressed_keys[K_g]:
+            fret_spritegroup.add(Brick((15+240,500)))            
+    
+    
+
+    #probably a better way to do this but it works for now
+    if first:
+        nextNote = pygame.time.get_ticks() + int(((1044 * 60) / (bpm * resolution)))
+        first = False
+    
+    if nextNote <= pygame.time.get_ticks():
+        
+        playedNote = True
+        #get note
+        chartList[0] = chartList[0].split()
+        note = int(chartList[0][3])
+        index = int(chartList[0][0])        
+        noteTime = ((index - currentIndex) * 60) / (bpm * resolution)
+         
+        nextNote = pygame.time.get_ticks() + noteTime * 1000
+    
+    canvas.fill(BLACK)
+    
+    #generate new group of balls
+    #we need to make sure we're separating adequately
+    if playedNote:
+        ball_spritegroup.add(Ball((69 + 111 * note, 0), note))
+
+    # Draw bricks and balls
+    fret_spritegroup.draw(canvas)
+    ball_spritegroup.draw(canvas)
+
+    # Show the new canvas
+    canvas.blit(album, (800,0))
+    pygame.display.flip()
+
+    # Call the .update method of each ball
+    # This will move them up and/or down
+    ball_spritegroup.update()
+ 
+    #pop note from chartList and shift index
+    if playedNote:
+        chartList.pop(0)
+        currentIndex = index
+        playedNote = False
+    
+    # Wait a little bit if necessary
+    # so this will 30 times per second
+    # i.e. 30 frames per second (fps)
+    #timeMeasure+=1
+    
+    print(clock.get_fps())
+    clock.tick(60)

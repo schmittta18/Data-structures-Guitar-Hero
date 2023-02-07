@@ -27,7 +27,7 @@ class Brick(pygame.sprite.Sprite):
     """
     Create a 'Brick' class, as a subclass of .Sprite
     """
-    def __init__(self, location):
+    def __init__(self, location,keyConstant):
         # initialise the super (.Sprite) class
         super().__init__()
 
@@ -45,14 +45,17 @@ class Brick(pygame.sprite.Sprite):
         # Move the .rect to the specified location
         self.rect = self.rect.move(location)
         
+                                
         
-    #def update(self):
-        #if pygame.sprite.spritecollide(self, brick_spritegroup, False):
-            #if self.keying:
-                
-            # Change the direction
-            # Start moving up instead of down
-            # or, start moving down instead of up
+        #Store the keyConstant
+        self.keyConstant = keyConstant
+        
+        
+    def update(self):
+        #If key not held down
+        if not pressed_keys[self.keyConstant]:
+            self.kill()
+            
                   
         
     
@@ -91,10 +94,8 @@ class Ball(pygame.sprite.Sprite):
     def update(self):
         # If this ball collides with any brick
         if pygame.sprite.spritecollide(self, fret_spritegroup, False):
-            # Change the direction
-            # Start moving up instead of down
-            # or, start moving down instead of up
-            self.move_y = -self.move_y
+            #Kill the sprite
+            self.kill()
 
         # Move the ball by the current direction and distance (10 up or down)
         self.rect.move_ip((0, self.move_y))
@@ -123,18 +124,18 @@ while not done:
         
         
         if pressed_keys[K_a]:
-            fret_spritegroup.add(Brick((15,500)))
+            fret_spritegroup.add(Brick((15,500),pygame.K_a))
             
         elif pressed_keys[K_s]:
-            fret_spritegroup.add(Brick((15+60,500)))
+            fret_spritegroup.add(Brick((15+60,500),pygame.K_s))
         if pressed_keys[K_d]:
-            fret_spritegroup.add(Brick((15+120,500)))
+            fret_spritegroup.add(Brick((15+120,500),pygame.K_d))
         elif pressed_keys[K_f]:
-            fret_spritegroup.add(Brick((15+180,500)))
+            fret_spritegroup.add(Brick((15+180,500),pygame.K_f))
         elif pressed_keys[K_g]:
-            fret_spritegroup.add(Brick((15+240,500)))
+            fret_spritegroup.add(Brick((15+240,500),pygame.K_g))
         elif pressed_keys[K_h]:
-            fret_spritegroup.add(Brick((15+300,500)))            
+            fret_spritegroup.add(Brick((15+300,500),pygame.K_h))           
     
     
             
@@ -160,6 +161,7 @@ while not done:
     # Call the .update method of each ball
     # This will move them up and/or down
     ball_spritegroup.update()
+    fret_spritegroup.update()
 
     # Wait a little bit if necessary
     # so this will 30 times per second

@@ -106,6 +106,9 @@ while (not done):
     pygame.time.delay(time-nextTick)
     
     note_spritegroup.draw(canvas)
+    
     pygame.display.flip()  
+    #Move the spritegroup around
+    
     
     #chartList.pop(0)

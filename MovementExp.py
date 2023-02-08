@@ -126,16 +126,15 @@ while not done:
         if pressed_keys[K_a]:
             fret_spritegroup.add(Brick((15,500),pygame.K_a))
             
-        elif pressed_keys[K_s]:
+        if pressed_keys[K_s]:
             fret_spritegroup.add(Brick((15+60,500),pygame.K_s))
         if pressed_keys[K_d]:
             fret_spritegroup.add(Brick((15+120,500),pygame.K_d))
-        elif pressed_keys[K_f]:
+        if pressed_keys[K_f]:
             fret_spritegroup.add(Brick((15+180,500),pygame.K_f))
-        elif pressed_keys[K_g]:
+        if pressed_keys[K_g]:
             fret_spritegroup.add(Brick((15+240,500),pygame.K_g))
-        elif pressed_keys[K_h]:
-            fret_spritegroup.add(Brick((15+300,500),pygame.K_h))           
+                  
     
     
             

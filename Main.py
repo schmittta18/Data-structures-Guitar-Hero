@@ -3,6 +3,8 @@ Guitar Hero Main Prototype
 """
 import pygame
 import Chart
+import sys
+import pygame.freetype
 import os
 
 from pygame.locals import *
@@ -13,6 +15,13 @@ canvas = pygame.display.set_mode((1380,720))
 pygame.mixer.pre_init(44100, -16, 2, 2048)
 keyConstants = [pygame.K_a,pygame.K_s,pygame.K_d,pygame.K_f,pygame.K_g,pygame.K_h]
 BLACK = (0, 0, 0)
+WHITE = (255,255,255)
+
+#Set up the font for the scoreboard
+font_path = os.path.join(os.path.dirname(os.path.realpath(__file__)),"Fonts","GFSTheokritos.otf")
+font_size = 20
+pygame.freetype.init()
+myfont = pygame.freetype.Font(font_path, font_size)
 
 
 class Fret(pygame.sprite.Sprite):
@@ -28,6 +37,7 @@ class Fret(pygame.sprite.Sprite):
         # The .image gets drawn when drawing the sprite
         self.image = pygame.Surface((50, 30))
         self.image.fill(pygame.color.Color('brown'))
+        
     
 
         # A sprite must have a .rect
@@ -68,17 +78,25 @@ class Note(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(location)
         self.move_y = 10
+        
 
     # The .update method gets called when calling the sprite group's
     # .update method
     def update(self):
         # If this note collides with any fret
         if pygame.sprite.spritecollide(self, fret_spritegroup, False):
+            
             #Kill the sprite
             self.kill()
 
         # Move the note by the current direction and distance (10 up or down)
         self.rect.move_ip((0, self.move_y))
+### Scoreboard Function###########################################
+def Scoreboard(score,location):
+    myfont.render_to(canvas, location, "Score:"+str(score), WHITE, None, size=64)
+    
+        
+        
 
 
 # These will group our frets and notes, so we can
@@ -86,6 +104,8 @@ class Note(pygame.sprite.Sprite):
 note_spritegroup = pygame.sprite.Group()
 fret_spritegroup = pygame.sprite.Group()
 song = Chart.Chart(int(input('Enter Song Number: ')), int(input('Enter difficulty: ')))
+
+rightNotes = 0
 
 '''
 Resolution is 192 for the majority of songs but may need to change
@@ -108,11 +128,14 @@ song.getMusic()[1].play(1)
 song.getMusic()[2].play(1)
 
 while not done:
+    
+    
 
     for event in pygame.event.get():
         if event.type == QUIT:
             done = True
         pressed_keys = pygame.key.get_pressed()
+        
         
         
         if pressed_keys[K_a]:
@@ -125,6 +148,10 @@ while not done:
             fret_spritegroup.add(Fret((60+300,650),pygame.K_f))
         if pressed_keys[K_g]:
             fret_spritegroup.add(Fret((60+400,650),pygame.K_g))
+        
+        collisions = pygame.sprite.groupcollide(note_spritegroup,fret_spritegroup,True,False,None)
+        rightNotes+= len(collisions)
+        
                   
     
     
@@ -164,6 +191,9 @@ while not done:
     # Draw frets and notes
     fret_spritegroup.draw(canvas)
     note_spritegroup.draw(canvas)
+    Scoreboard(rightNotes,(900,4))
+    
+    
 
     # Show the new canvas
     pygame.display.flip()
@@ -171,7 +201,9 @@ while not done:
     # Call the .update method of each ball
     # This will move them up and/or down
     note_spritegroup.update()
-    fret_spritegroup.update()  
+    fret_spritegroup.update() 
+    
+    
     
     # Wait a little bit if necessary
     # so this will 30 times per second

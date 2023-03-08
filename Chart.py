@@ -1,15 +1,10 @@
 #Chart class
 '''
 Implements all functionality related to music files
-
 Last updated: 1645 Feb 7 2023
 '''
 
-import os
-import pygame
-pygame.init()
-pygame.mixer.pre_init(44100, -16, 2, 2048)
-    
+import os 
         
 class Chart(object):
     
@@ -25,15 +20,15 @@ class Chart(object):
         self.songPath = self.__loadSong(songChoice)
         
         #Sound Files
-        self.guitar = pygame.mixer.Sound((os.path.join(self.songPath, 'guitar.ogg')))
+        self.guitar = os.path.join(self.songPath, 'guitar.ogg')
         
         #Some songs don't have rhythm files...
-        self.rhythm = pygame.mixer.Sound((os.path.join(self.songPath, 'rhythm.ogg')))
-        self.song = pygame.mixer.Sound((os.path.join(self.songPath, 'song.ogg')))
+        self.rhythm = os.path.join(self.songPath, 'rhythm.ogg')
+        self.song = os.path.join(self.songPath, 'song.ogg')
         
         #Album Art
-        self.album = pygame.image.load((os.path.join(self.songPath, 'album.png')))
-        
+        self.album = os.path.join(self.songPath, 'album.png')
+    
         #Note Chart
         self.difficulty = self.__loadDifficulty(difficultyChoice)
         self.chart = self.__loadChart(os.path.join(self.songPath, 'notes.chart'))

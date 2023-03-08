@@ -1,20 +1,28 @@
 from time import sleep
 import pygame
 import pygame_menu
+import Main
 from pygame_menu import themes
 
 pygame.init()
 surface = pygame.display.set_mode((1380,720))
 
-def set_difficulty(value, difficulty):
-    print(value)
+
+
+    
+def set_difficulty(value,difficulty):
     print(difficulty)
+    
 def set_song(value,song):
     print(song)
-    print(value)
+    
+def get_difficulty(widget):
+    return widget.get_value()
 
 def start_the_game():
-    pass
+    Main.Launcher(songSwitch.get_value()[1],diffSwitch.get_value()[1])
+    
+    
 
 
 
@@ -26,10 +34,10 @@ mainmenu.add.button('Play', start_the_game)
 mainmenu.add.button('Quit', pygame_menu.events.EXIT)
 
 
-mainmenu.add.selector('Difficulty :', [('Expert',0),('Hard', 1), ('Medium', 2),('Easy',3)], onchange=set_difficulty)
+diffSwitch = mainmenu.add.selector('Difficulty :', [('Expert',0),('Hard', 1), ('Medium', 2),('Easy',3)], onchange=set_difficulty)
 
 
-mainmenu.add.selector('Song:', [("Guns N' Roses - Welcome To The Jungle",0),
+songSwitch = mainmenu.add.selector('Song:', [("Guns N' Roses - Welcome To The Jungle",0),
                             ("Weezer - My Name Is Jonas", 1),
                             ("Pearl Jam - Even Flow", 2),
                             ("Heart - Barracuda",3),

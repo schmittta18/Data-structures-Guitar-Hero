@@ -2,6 +2,7 @@
 Guitar Hero Main Prototype
 """
 import pygame
+import pygame_menu
 import Chart
 import sys
 import pygame.freetype
@@ -55,7 +56,7 @@ class Fret(pygame.sprite.Sprite):
         
     def update(self):
         #If key not held down
-        if not pressed_keys[self.keyConstant]:
+        if not pygame.key.get_pressed()[self.keyConstant]:
             self.kill()
             
                   
@@ -69,7 +70,7 @@ class Note(pygame.sprite.Sprite):
     can be seen 'through' the sprite's Surface
     """
 
-    def __init__(self, location, color):
+    def __init__(self, location, color,fretGroup):
         super().__init__()
         
         colors = ['green', 'red', 'yellow', 'blue', 'orange']
@@ -78,13 +79,14 @@ class Note(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect = self.rect.move(location)
         self.move_y = 10
+        self.fretGroup = fretGroup
         
 
     # The .update method gets called when calling the sprite group's
     # .update method
     def update(self):
         # If this note collides with any fret
-        if pygame.sprite.spritecollide(self, fret_spritegroup, False):
+        if pygame.sprite.spritecollide(self, self.fretGroup, False):
             
             #Kill the sprite
             self.kill()
@@ -95,119 +97,119 @@ class Note(pygame.sprite.Sprite):
 def Scoreboard(score,location):
     myfont.render_to(canvas, location, "Score:"+str(score), WHITE, None, size=64)
     
-        
-        
-
-
-# These will group our frets and notes, so we can
-# place and update them with a single command
-note_spritegroup = pygame.sprite.Group()
-fret_spritegroup = pygame.sprite.Group()
-song = Chart.Chart(int(input('Enter Song Number: ')), int(input('Enter difficulty: ')))
-
-rightNotes = 0
-
-'''
-Resolution is 192 for the majority of songs but may need to change
-based on future song decisions, BPM will need to vary as well
-'''
-resolution = song.getResolution()
-bpm = song.getBPM()*1.04
     
-
-# Use a pygame .Clock to slow this down
-clock = pygame.time.Clock()
-
-first = True
-done = False
-
-
-
-song.getMusic()[0].play(1)
-song.getMusic()[1].play(1)
-song.getMusic()[2].play(1)
-
-while not done:
-    
-    
-
-    for event in pygame.event.get():
-        if event.type == QUIT:
-            done = True
-        pressed_keys = pygame.key.get_pressed()
+class Launcher:
+    def __init__(self,songNumber,difficultyNumber):
+        self.songNumber = songNumber
+        self.difficultyNumber = difficultyNumber
         
+        # These will group our frets and notes, so we can
+        # place and update them with a single command
+        note_spritegroup = pygame.sprite.Group()
+        fret_spritegroup = pygame.sprite.Group()
+        song = Chart.Chart(self.songNumber, self.difficultyNumber)
         
+        rightNotes = 0
+
+
+        resolution = song.getResolution()
+        bpm = song.getBPM()*1.04
+            
         
-        if pressed_keys[K_a]:
-            fret_spritegroup.add(Fret((60,650),pygame.K_a))
-        if pressed_keys[K_s]:
-            fret_spritegroup.add(Fret((60+100,650),pygame.K_s))
-        if pressed_keys[K_d]:
-            fret_spritegroup.add(Fret((60+200,650),pygame.K_d))
-        if pressed_keys[K_f]:
-            fret_spritegroup.add(Fret((60+300,650),pygame.K_f))
-        if pressed_keys[K_g]:
-            fret_spritegroup.add(Fret((60+400,650),pygame.K_g))
+        # Use a pygame .Clock to slow this down
+        clock = pygame.time.Clock()
         
-        collisions = pygame.sprite.groupcollide(note_spritegroup,fret_spritegroup,True,False,None)
-        rightNotes+= len(collisions)
+        first = True
+        done = False
+
+
+
+        song.getMusic()[0].play(1)
+        song.getMusic()[1].play(1)
+        song.getMusic()[2].play(1)
+        ###Event Loop
         
+        while not done:
+            
+            
+        
+            for event in pygame.event.get():
+                if event.type == QUIT:
+                    done = True
+                pressed_keys = pygame.key.get_pressed()
+                
+                
+                
+                if pressed_keys[K_a]:
+                    fret_spritegroup.add(Fret((60,650),pygame.K_a))
+                if pressed_keys[K_s]:
+                    fret_spritegroup.add(Fret((60+100,650),pygame.K_s))
+                if pressed_keys[K_d]:
+                    fret_spritegroup.add(Fret((60+200,650),pygame.K_d))
+                if pressed_keys[K_f]:
+                    fret_spritegroup.add(Fret((60+300,650),pygame.K_f))
+                if pressed_keys[K_g]:
+                    fret_spritegroup.add(Fret((60+400,650),pygame.K_g))
+                
+                collisions = pygame.sprite.groupcollide(note_spritegroup,fret_spritegroup,True,False,None)
+                rightNotes+= len(collisions)
+                
                   
     
     
             
 
-    canvas.fill(BLACK)
-    
-    #generate new group of notes
-    #we need to make sure we're separating adequately
-    
-    
-    if first:
-        nextNote = pygame.time.get_ticks() + int(((song.getFirstNote() * 60) / (bpm * resolution)))*1000
-    
-    if nextNote <= pygame.time.get_ticks():
+            canvas.fill(BLACK)
+            
+            #generate new group of notes
+            #we need to make sure we're separating adequately
+            
+            
+            if first:
+                nextNote = pygame.time.get_ticks() + int(((song.getFirstNote() * 60) / (bpm * resolution)))*1000
+            
+            if nextNote <= pygame.time.get_ticks():
+                
+                noteTime = ((int(song.getTime()) * 60) / (bpm * resolution))
+                
+                note = song.pop()
+                note_spritegroup.add(Note((60 + 100 * note, 0), note,fret_spritegroup))  
+                
+                
+                nextNote = pygame.time.get_ticks() + noteTime * 1000
+            
+            if first:
+                syncTime = pygame.time.get_ticks() + int(((song.getSyncTime() * 60) / (bpm * resolution)))*1000
+                print(song.getSyncTime())
+                first = False
+            
+            if syncTime <= pygame.time.get_ticks():
+                bpm = song.bpmChange() * 1.04
+                syncTime = pygame.time.get_ticks() + int(((song.getSyncTime() * 60) / (bpm * resolution)))*1000
+                print(bpm)
         
-        noteTime = ((int(song.getTime()) * 60) / (bpm * resolution))
-        
-        note = song.pop()
-        note_spritegroup.add(Note((60 + 100 * note, 0), note))  
         
         
-        nextNote = pygame.time.get_ticks() + noteTime * 1000
-    
-    if first:
-        syncTime = pygame.time.get_ticks() + int(((song.getSyncTime() * 60) / (bpm * resolution)))*1000
-        print(song.getSyncTime())
-        first = False
-    
-    if syncTime <= pygame.time.get_ticks():
-        bpm = song.bpmChange() * 1.04
-        syncTime = pygame.time.get_ticks() + int(((song.getSyncTime() * 60) / (bpm * resolution)))*1000
-        print(bpm)
-        
-        
-        
-    # Draw frets and notes
-    fret_spritegroup.draw(canvas)
-    note_spritegroup.draw(canvas)
-    Scoreboard(rightNotes,(900,4))
-    
+            # Draw frets and notes
+            fret_spritegroup.draw(canvas)
+            note_spritegroup.draw(canvas)
+            Scoreboard(rightNotes,(900,4))
+            
     
 
-    # Show the new canvas
-    pygame.display.flip()
-
-    # Call the .update method of each ball
-    # This will move them up and/or down
-    note_spritegroup.update()
-    fret_spritegroup.update() 
-    
-    
-    
-    # Wait a little bit if necessary
-    # so this will 30 times per second
-    # i.e. 30 frames per second (fps)
+            # Show the new canvas
+            pygame.display.flip()
         
+            # Call the .update method of each ball
+            # This will move them up and/or down
+            note_spritegroup.update()
+            fret_spritegroup.update() 
     
-    clock.tick(75)
+    
+    
+            # Wait a little bit if necessary
+            # so this will 30 times per second
+            # i.e. 30 frames per second (fps)
+                
+            
+            clock.tick(75)

@@ -7,6 +7,7 @@ import Chart
 import sys
 import pygame.freetype
 import os
+import Scoresheet
 
 from pygame.locals import *
 
@@ -38,6 +39,8 @@ class Fret(pygame.sprite.Sprite):
         # The .image gets drawn when drawing the sprite
         self.image = pygame.Surface((50, 30))
         self.image.fill(pygame.color.Color('brown'))
+        #self.birth = pygame.time.get_ticks()
+        print(" a fret is born")
         
     
 
@@ -58,6 +61,9 @@ class Fret(pygame.sprite.Sprite):
         #If key not held down
         if not pygame.key.get_pressed()[self.keyConstant]:
             self.kill()
+        #if (pygame.time.get_ticks() - self.birth) > 5000:
+            #print(pygame.time.get_ticks()-self.birth)
+            #self.kill()
             
                   
         
@@ -94,22 +100,41 @@ class Note(pygame.sprite.Sprite):
         # Move the note by the current direction and distance (10 up or down)
         self.rect.move_ip((0, self.move_y))
 ### Scoreboard Function###########################################
-def Scoreboard(score,location):
+def Scoreboard(score,location,name,scoreList):
     myfont.render_to(canvas, location, "Score:"+str(score), WHITE, None, size=64)
+    xLocation = location[0]
+    yLocation = location[1]
+    leaderBoardLocation = (xLocation,yLocation+200)
+    
+    myfont.render_to(canvas,leaderBoardLocation, "High Scores:",WHITE, None, size = 64)
+    firstScoreX = xLocation
+    firstScoreY = yLocation+300
+    for k in range(0,len(scoreList)):
+        myfont.render_to(canvas,(firstScoreX,firstScoreY+100*k),scoreList[k],WHITE,size = 48)
+        
+        
+    
+    
+    
     
     
 class Launcher:
-    def __init__(self,songNumber,difficultyNumber):
-        self.songNumber = songNumber
-        self.difficultyNumber = difficultyNumber
+    def __init__(self,songTuple,difficultyTuple,userName):
+        self.songNumber = songTuple[1]
+        self.difficultyNumber = difficultyTuple[1]
+        self.userName = userName
+        self.scoreSheet = Scoresheet.LeaderBoard()
+       
+        self.scoreList = self.scoreSheet.readLeaderBoard((songTuple[0][0],difficultyTuple[0][0]))
+        
         
         # These will group our frets and notes, so we can
         # place and update them with a single command
-        note_spritegroup = pygame.sprite.Group()
-        fret_spritegroup = pygame.sprite.Group()
+        note_spritegroup = pygame.sprite.LayeredUpdates()
+        fret_spritegroup = pygame.sprite.LayeredUpdates()
         song = Chart.Chart(self.songNumber, self.difficultyNumber)
         
-        rightNotes = 0
+        self.rightNotes = 0
 
 
         resolution = song.getResolution()
@@ -129,32 +154,52 @@ class Launcher:
         song.getMusic()[2].play(1)
         ###Event Loop
         
+        
         while not done:
             
             
         
             for event in pygame.event.get():
                 if event.type == QUIT:
+                    song.getMusic()[0].stop()
+                    song.getMusic()[1].stop()
+                    song.getMusic()[2].stop()  
+                    self.scoreSheet.writeLeaderBoard((songTuple[0][0],difficultyTuple[0][0]),self.userName,self.rightNotes)
+                    
                     done = True
+                    
                 pressed_keys = pygame.key.get_pressed()
                 
                 
                 
                 if pressed_keys[K_a]:
-                    fret_spritegroup.add(Fret((60,650),pygame.K_a))
+                    existingA = fret_spritegroup.get_sprites_at((60,650))
+                    if not existingA:
+                        fret_spritegroup.add(Fret((60,650),pygame.K_a))
                 if pressed_keys[K_s]:
-                    fret_spritegroup.add(Fret((60+100,650),pygame.K_s))
+                    existingS = fret_spritegroup.get_sprites_at((160,650))
+                    if not existingS:
+                        fret_spritegroup.add(Fret((60+100,650),pygame.K_s))
                 if pressed_keys[K_d]:
-                    fret_spritegroup.add(Fret((60+200,650),pygame.K_d))
+                    existingD = fret_spritegroup.get_sprites_at((260,650))
+                    if not existingD:
+                        fret_spritegroup.add(Fret((60+200,650),pygame.K_d))                    
+                    
                 if pressed_keys[K_f]:
-                    fret_spritegroup.add(Fret((60+300,650),pygame.K_f))
+                    existingF = fret_spritegroup.get_sprites_at((360,650))
+                    if not existingF:
+                        fret_spritegroup.add(Fret((60+300,650),pygame.K_f))                    
+                   
                 if pressed_keys[K_g]:
-                    fret_spritegroup.add(Fret((60+400,650),pygame.K_g))
+                    existingG = fret_spritegroup.get_sprites_at((460,650))
+                    if not existingG:
+                        fret_spritegroup.add(Fret((60+400,650),pygame.K_g))                    
+                    
                 
                 collisions = pygame.sprite.groupcollide(note_spritegroup,fret_spritegroup,True,False,None)
-                rightNotes+= len(collisions)
+                self.rightNotes+= len(collisions)
                 
-                  
+                print(fret_spritegroup.sprites()) 
     
     
             
@@ -170,10 +215,18 @@ class Launcher:
             
             if nextNote <= pygame.time.get_ticks():
                 
-                noteTime = ((int(song.getTime()) * 60) / (bpm * resolution))
+                try:
+                    noteTime = ((int(song.getTime()) * 60) / (bpm * resolution))
+                except:
+                    done = True
+                    #print("End of the line")
                 
-                note = song.pop()
-                note_spritegroup.add(Note((60 + 100 * note, 0), note,fret_spritegroup))  
+                try :
+                    note = song.pop()
+                    note_spritegroup.add(Note((60 + 100 * note, 0), note,fret_spritegroup)) 
+                except:
+                    done = True
+                    #print('END OF THE LINE')
                 
                 
                 nextNote = pygame.time.get_ticks() + noteTime * 1000
@@ -193,7 +246,9 @@ class Launcher:
             # Draw frets and notes
             fret_spritegroup.draw(canvas)
             note_spritegroup.draw(canvas)
-            Scoreboard(rightNotes,(900,4))
+            Scoreboard(self.rightNotes,(900,4),self.userName,self.scoreList)
+            
+            
             
     
 
@@ -213,3 +268,6 @@ class Launcher:
                 
             
             clock.tick(75)
+        ####Here, we write the score to our leaderboard
+        
+        
